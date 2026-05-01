@@ -7,11 +7,11 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://tegronlearnify.onrender.com',
+        target: 'https://tegronlearnify-1.onrender.com',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'https://tegronlearnify.onrender.com',
+        target: 'https://tegronlearnify-1.onrender.com',
         changeOrigin: true,
       },
     },

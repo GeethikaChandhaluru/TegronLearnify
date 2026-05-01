@@ -62,7 +62,7 @@ npm run dev      # development (nodemon)
 npm start        # production
 ```
 
-Server runs on `https://tegronlearnify.onrender.com`
+Server runs on `https://tegronlearnify-1.onrender.com`
 
 ---
 
