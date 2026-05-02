@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { buyNow } from '../services/api';
 import toast from 'react-hot-toast';
+import { getFileUrl } from '../utils/urlHelper';
 
 export default function BookCard({ book, delay = 0 }) {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function BookCard({ book, delay = 0 }) {
       <div style={{ position: 'relative' }}>
         {book.thumbnail ? (
           <img
-            src={book.thumbnail}
+            src={getFileUrl(book.thumbnail)}
             alt={book.title}
             className="book-card-img"
             onError={(e) => { e.target.style.display = 'none'; }}

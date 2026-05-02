@@ -5,6 +5,7 @@ import Loader   from '../../components/Loader';
 import { useCart } from '../../context/CartContext';
 import { getBook, buyNow } from '../../services/api';
 import toast from 'react-hot-toast';
+import { getFileUrl } from '../../utils/urlHelper';
 
 export default function BookDetails() {
   const { id } = useParams();
@@ -76,7 +77,7 @@ export default function BookDetails() {
           {/* Cover */}
           <div>
             {book.thumbnail ? (
-              <img src={book.thumbnail} alt={book.title} className="book-detail-img" />
+              <img src={getFileUrl(book.thumbnail)} alt={book.title} className="book-detail-img" />
             ) : (
               <div className="book-detail-img" style={{
                 display: 'flex', flexDirection: 'column',
