@@ -5,18 +5,37 @@ const fs = require('fs');
 const Book = require('../models/Book');
 const PurchasedBook = require('../models/PurchasedBook');
 
-// Multer storage config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const folder =
-      file.fieldname === 'pdfFile'
-        ? 'uploads/pdfs'
-        : 'uploads/thumbnails';
-    if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-    cb(null, folder);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`);
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    let folderName = 'uploads';
+    let resourceType = 'auto';
+
+    if (file.fieldname === 'pdfFile') {
+      folderName = 'uploads/pdfs';
+      resourceType = 'raw'; // use raw for PDF to avoid image conversion
+    } else {
+      folderName = 'uploads/thumbnails';
+      resourceType = 'image';
+    }
+
+    // remove extension from originalname for public_id
+    const nameWithoutExt = file.originalname.replace(/\s/g, '_').split('.').slice(0, -1).join('.');
+    
+    return {
+      folder: folderName,
+      resource_type: resourceType,
+      public_id: `${Date.now()}-${nameWithoutExt || file.originalname.replace(/\s/g, '_')}`,
+    };
   },
 });
 
@@ -68,9 +87,9 @@ const addBook = asyncHandler(async (req, res) => {
   }
 
   const thumbnail = req.files?.thumbnail
-    ? `/${req.files.thumbnail[0].path}`
+    ? req.files.thumbnail[0].path
     : '';
-  const pdfFile = req.files?.pdfFile ? `/${req.files.pdfFile[0].path}` : '';
+  const pdfFile = req.files?.pdfFile ? req.files.pdfFile[0].path : '';
 
   // Must have either a PDF file or a URL
   if (!pdfFile && !bookUrl) {
@@ -106,10 +125,10 @@ const updateBook = asyncHandler(async (req, res) => {
   const { title, description, price, author, category, bookUrl } = req.body;
 
   const thumbnail = req.files?.thumbnail
-    ? `/${req.files.thumbnail[0].path}`
+    ? req.files.thumbnail[0].path
     : book.thumbnail;
   const pdfFile = req.files?.pdfFile
-    ? `/${req.files.pdfFile[0].path}`
+    ? req.files.pdfFile[0].path
     : book.pdfFile;
 
   const updated = await Book.findByIdAndUpdate(
