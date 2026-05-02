@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Use environment variable (Vite) OR fallback to Render URL
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://your-backend.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://tegronlearnify-2.onrender.com/api',
 });
 
 // Attach token to every request
