@@ -1,79 +1,77 @@
 const asyncHandler = require('express-async-handler');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
 const Book = require('../models/Book');
-const PurchasedBook = require('../models/PurchasedBook');
 
-// Multer storage config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const folder =
-      file.fieldname === 'pdfFile'
-        ? 'uploads/pdfs'
-        : 'uploads/thumbnails';
-    if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-    cb(null, folder);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, '_')}`);
-  },
+// ── Cloudinary config (reads from .env) ──────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const fileFilter = (req, file, cb) => {
-  if (file.fieldname === 'pdfFile') {
-    if (file.mimetype === 'application/pdf') cb(null, true);
-    else cb(new Error('Only PDF files allowed'), false);
-  } else {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
-    else cb(new Error('Only image files allowed'), false);
-  }
-};
-
-const upload = multer({ storage, fileFilter });
+// ── Multer: keep files in memory (no disk write) ─────────
+const upload = multer({ storage: multer.memoryStorage() });
 const uploadFields = upload.fields([
   { name: 'thumbnail', maxCount: 1 },
   { name: 'pdfFile', maxCount: 1 },
 ]);
 
-// @desc    Get all books
-// @route   GET /api/books
-// @access  Public
+// Helper: upload a buffer to Cloudinary and return secure_url
+const uploadToCloudinary = (buffer, folder, resourceType = 'auto') =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: resourceType },
+      (err, result) => (err ? reject(err) : resolve(result.secure_url))
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+
+// ── GET all books ─────────────────────────────────────────
 const getAllBooks = asyncHandler(async (req, res) => {
   const books = await Book.find().sort({ createdAt: -1 });
   res.json({ success: true, count: books.length, data: books });
 });
 
-// @desc    Get single book
-// @route   GET /api/books/:id
-// @access  Public
+// ── GET single book ───────────────────────────────────────
 const getBook = asyncHandler(async (req, res) => {
   const book = await Book.findById(req.params.id);
-  if (!book) {
-    res.status(404);
-    throw new Error('Book not found');
-  }
+  if (!book) { res.status(404); throw new Error('Book not found'); }
   res.json({ success: true, data: book });
 });
 
-// @desc    Add new book (Admin)
-// @route   POST /api/books
-// @access  Admin
+// ── ADD book (Admin) ──────────────────────────────────────
 const addBook = asyncHandler(async (req, res) => {
-  const { title, description, price, author, category, bookUrl } = req.body;
+  const { title, description, price, bookUrl } = req.body;
 
   if (!title || !description || !price) {
     res.status(400);
     throw new Error('Please fill all required fields (title, description, price)');
   }
 
-  const thumbnail = req.files?.thumbnail
-    ? `/${req.files.thumbnail[0].path}`
-    : '';
-  const pdfFile = req.files?.pdfFile ? `/${req.files.pdfFile[0].path}` : '';
+  // Upload thumbnail to Cloudinary if provided
+  let thumbnailUrl = '';
+  if (req.files?.thumbnail?.[0]) {
+    thumbnailUrl = await uploadToCloudinary(
+      req.files.thumbnail[0].buffer,
+      'tegronnotes/thumbnails',
+      'image'
+    );
+  }
 
-  // Must have either a PDF file or a URL
-  if (!pdfFile && !bookUrl) {
+  // Upload PDF to Cloudinary if provided
+  let pdfFileUrl = '';
+  if (req.files?.pdfFile?.[0]) {
+    pdfFileUrl = await uploadToCloudinary(
+      req.files.pdfFile[0].buffer,
+      'tegronnotes/pdfs',
+      'raw'        // 'raw' tells Cloudinary to preserve the file as-is (PDF)
+    );
+  }
+
+  // At least one content source required
+  if (!pdfFileUrl && !bookUrl) {
     res.status(400);
     throw new Error('Please provide either a PDF file or an external URL');
   }
@@ -84,33 +82,41 @@ const addBook = asyncHandler(async (req, res) => {
     price: Number(price),
     author: req.body.author || '-',
     category: req.body.category || 'General',
-    bookUrl,
-    thumbnail,
-    pdfFile,
+    bookUrl: bookUrl || '',
+    thumbnail: thumbnailUrl,
+    pdfFile: pdfFileUrl,
     addedBy: req.user._id,
   });
 
   res.status(201).json({ success: true, data: book });
 });
 
-// @desc    Update book (Admin)
-// @route   PUT /api/books/:id
-// @access  Admin
+// ── UPDATE book (Admin) ───────────────────────────────────
 const updateBook = asyncHandler(async (req, res) => {
   const book = await Book.findById(req.params.id);
-  if (!book) {
-    res.status(404);
-    throw new Error('Book not found');
-  }
+  if (!book) { res.status(404); throw new Error('Book not found'); }
 
   const { title, description, price, author, category, bookUrl } = req.body;
 
-  const thumbnail = req.files?.thumbnail
-    ? `/${req.files.thumbnail[0].path}`
-    : book.thumbnail;
-  const pdfFile = req.files?.pdfFile
-    ? `/${req.files.pdfFile[0].path}`
-    : book.pdfFile;
+  // Re-upload thumbnail only if a new file was sent
+  let thumbnailUrl = book.thumbnail;
+  if (req.files?.thumbnail?.[0]) {
+    thumbnailUrl = await uploadToCloudinary(
+      req.files.thumbnail[0].buffer,
+      'tegronnotes/thumbnails',
+      'image'
+    );
+  }
+
+  // Re-upload PDF only if a new file was sent
+  let pdfFileUrl = book.pdfFile;
+  if (req.files?.pdfFile?.[0]) {
+    pdfFileUrl = await uploadToCloudinary(
+      req.files.pdfFile[0].buffer,
+      'tegronnotes/pdfs',
+      'raw'
+    );
+  }
 
   const updated = await Book.findByIdAndUpdate(
     req.params.id,
@@ -120,9 +126,9 @@ const updateBook = asyncHandler(async (req, res) => {
       price: price ? Number(price) : book.price,
       author: author || book.author,
       category: category || book.category,
-      bookUrl: bookUrl || book.bookUrl,
-      thumbnail,
-      pdfFile,
+      bookUrl: bookUrl !== undefined ? bookUrl : book.bookUrl,
+      thumbnail: thumbnailUrl,
+      pdfFile: pdfFileUrl,
     },
     { new: true, runValidators: true }
   );
@@ -130,25 +136,12 @@ const updateBook = asyncHandler(async (req, res) => {
   res.json({ success: true, data: updated });
 });
 
-// @desc    Delete book (Admin)
-// @route   DELETE /api/books/:id
-// @access  Admin
+// ── DELETE book (Admin) ───────────────────────────────────
 const deleteBook = asyncHandler(async (req, res) => {
   const book = await Book.findById(req.params.id);
-  if (!book) {
-    res.status(404);
-    throw new Error('Book not found');
-  }
-
+  if (!book) { res.status(404); throw new Error('Book not found'); }
   await book.deleteOne();
   res.json({ success: true, message: 'Book deleted successfully' });
 });
 
-module.exports = {
-  getAllBooks,
-  getBook,
-  addBook,
-  updateBook,
-  deleteBook,
-  uploadFields,
-};
+module.exports = { getAllBooks, getBook, addBook, updateBook, deleteBook, uploadFields };
