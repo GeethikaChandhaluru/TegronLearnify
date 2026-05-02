@@ -22,7 +22,12 @@ connectDB();
 // 🔥 CORS FIX (IMPORTANT)
 // ======================
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://tegron-learnify-a1d1.vercel.app",
+  origin: [
+    process.env.CLIENT_URL,
+    "https://tegron-learnify-a1d1.vercel.app",
+    "https://tegronlearnify-6vzp.vercel.app",
+    "http://localhost:5173"
+  ].filter(Boolean),
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
