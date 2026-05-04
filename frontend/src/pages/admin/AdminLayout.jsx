@@ -16,7 +16,9 @@ export default function AdminLayout({ children }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // ✅ NEW
 
   const doLogout = () => {
     logout();
@@ -25,22 +27,44 @@ export default function AdminLayout({ children }) {
 
   return (
     <>
+      {/* ✅ Mobile Hamburger */}
+      <button
+        className="admin-menu-btn"
+        onClick={() => setSidebarOpen(true)}
+      >
+        ☰
+      </button>
+
       <div className="admin-layout">
-        <aside className="admin-sidebar">
+        <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+          {/* ✅ Close button */}
+          <button
+            className="close-btn"
+            onClick={() => setSidebarOpen(false)}
+          >
+            ×
+          </button>
+
           <div className="admin-sidebar-logo">
             Tegron <span>Admin</span>
           </div>
+
           <nav className="admin-nav">
             {navItems.map(item => (
               <button
                 key={item.path}
                 className={`admin-nav-item ${pathname === item.path ? 'active' : ''}`}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  setSidebarOpen(false); // auto close
+                }}
               >
                 <span>{item.icon}</span> {item.label}
               </button>
             ))}
+
             <div className="admin-nav-spacer" />
+
             <button
               className="admin-nav-item danger"
               onClick={() => setConfirmLogout(true)}
@@ -49,6 +73,7 @@ export default function AdminLayout({ children }) {
             </button>
           </nav>
         </aside>
+
         <main className="admin-content">{children}</main>
       </div>
 
