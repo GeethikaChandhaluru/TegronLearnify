@@ -12,15 +12,18 @@ export default function BookCard({ book, delay = 0 }) {
     e.stopPropagation();
 
     try {
+      // FREE BOOK (no payment)
       if (book.price === 0) {
         await buyNow(book._id);
-        toast.success('Purchase successful! Check My Books.');
+        toast.success('Purchase successful!');
         navigate('/purchased');
         return;
       }
 
+      // STEP 1: Create order from backend
       const { data } = await createRazorpayOrder(book.price);
 
+      // STEP 2: Razorpay options
       const options = {
         key: data.key,
         amount: data.order.amount,
@@ -33,8 +36,8 @@ export default function BookCard({ book, delay = 0 }) {
           const verifyRes = await verifyRazorpayPayment(response);
 
           if (verifyRes.data.success) {
-            await buyNow(book._id);
-            toast.success('Payment successful! Book added to My Books.');
+            await buyNow(book._id); // ✅ ONLY AFTER PAYMENT
+            toast.success('Payment successful!');
             navigate('/purchased');
           } else {
             toast.error('Payment verification failed');
@@ -46,8 +49,15 @@ export default function BookCard({ book, delay = 0 }) {
         },
       };
 
+      // STEP 3: Safe Razorpay call
+      if (!window.Razorpay) {
+        toast.error('Payment system not loaded');
+        return;
+      }
+
       const rzp = new window.Razorpay(options);
       rzp.open();
+
     } catch (err) {
       toast.error(err.response?.data?.message || 'Payment failed');
     }
