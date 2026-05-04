@@ -4,7 +4,7 @@ import Navbar from '../../components/Navbar';
 import Loader from '../../components/Loader';
 import ConfirmModal from '../../components/ConfirmModal';
 import { useCart } from '../../context/CartContext';
-import api, { checkoutCart } from '../../services/api';
+import { checkoutCart, createRazorpayOrder, verifyRazorpayPayment } from '../../services/api';
 import toast from 'react-hot-toast';
 import { getFileUrl } from '../../utils/urlHelper';
 
@@ -37,9 +37,7 @@ export default function CartPage() {
     setCheckingOut(true);
 
     try {
-      const orderRes = await api.post('/payments/create-order', {
-        amount: totalAmt,
-      });
+      const orderRes = await createRazorpayOrder(totalAmt);
 
       const { order, key } = orderRes.data;
 
@@ -53,7 +51,7 @@ export default function CartPage() {
 
         handler: async function (response) {
           try {
-            const verifyRes = await api.post('/payments/verify-payment', response);
+            const verifyRes = await verifyRazorpayPayment(response);
 
             if (verifyRes.data.success) {
               await checkoutCart();
