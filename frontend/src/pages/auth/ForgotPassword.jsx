@@ -4,10 +4,10 @@ import { forgotPassword } from '../../services/api';
 import toast from 'react-hot-toast';
 
 export default function ForgotPassword() {
-  const [email, setEmail]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [sent, setSent]         = useState(false);
-  const [error, setError]       = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +26,7 @@ export default function ForgotPassword() {
   return (
     <div className="auth-layout">
       <div className="auth-brand">
-        <div className="auth-brand-logo">Tegron <span>Notes</span></div>
+        <div className="auth-brand-logo">Tegron <span>Learnify</span></div>
         <p className="auth-brand-tagline">
           No worries! We'll send you a reset link to your registered email address.
         </p>

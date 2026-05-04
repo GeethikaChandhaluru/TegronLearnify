@@ -33,7 +33,7 @@ export default function Login() {
   return (
     <div className="auth-layout">
       <div className="auth-brand">
-        <div className="auth-brand-logo">Tegron <span>Notes</span></div>
+        <div className="auth-brand-logo">Tegron <span>Learnify</span></div>
         <p className="auth-brand-tagline">
           Your ultimate digital library. Thousands of books, one platform.
           Learn, grow, and read at your own pace.

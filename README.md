@@ -1,4 +1,4 @@
-# 📚 Tegron Notes — Digital Books E-Commerce Platform
+# 📚 Tegron Learnify — Digital Books E-Commerce Platform
 
 A full-stack digital books e-commerce platform built with React.js, Node.js, Express, and MongoDB Atlas.
 

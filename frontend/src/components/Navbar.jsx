@@ -5,9 +5,9 @@ import { useCart } from '../context/CartContext';
 import ProfileDropdown from './ProfileDropdown';
 
 export default function Navbar() {
-  const { user }      = useAuth();
+  const { user } = useAuth();
   const { cartCount } = useCart();
-  const navigate      = useNavigate();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -15,7 +15,7 @@ export default function Navbar() {
       <div className="navbar-inner">
         {/* Logo */}
         <Link to="/" className="navbar-logo">
-          Tegron<span>Notes</span>
+          Tegron<span>Learnify</span>
         </Link>
 
         {/* Desktop nav links — centred */}
