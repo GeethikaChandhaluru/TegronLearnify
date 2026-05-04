@@ -1,34 +1,82 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar   from '../../components/Navbar';
-import Loader   from '../../components/Loader';
+import Navbar from '../../components/Navbar';
+import Loader from '../../components/Loader';
 import ConfirmModal from '../../components/ConfirmModal';
 import { useCart } from '../../context/CartContext';
-import { checkoutCart } from '../../services/api';
+import api, { checkoutCart } from '../../services/api';
 import toast from 'react-hot-toast';
 import { getFileUrl } from '../../utils/urlHelper';
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { cart, removeFromCart, clearCartLocal } = useCart();
-  const [checkingOut, setCheckingOut]   = useState(false);
-  const [toRemove, setToRemove]         = useState(null); // { bookId, title }
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [toRemove, setToRemove] = useState(null); // { bookId, title }
   const [showCheckout, setShowCheckout] = useState(false);
 
-  const items    = cart?.items || [];
+  const items = cart?.items || [];
   const totalAmt = items.reduce((s, i) => s + (i.book?.price || 0), 0);
 
   const handleCheckout = async () => {
     setShowCheckout(false);
-    if (items.length === 0) { toast.error('Your cart is empty'); return; }
-    setCheckingOut(true);
-    try {
+
+    if (items.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    if (totalAmt <= 0) {
       await checkoutCart();
       clearCartLocal();
       toast.success('Order placed successfully! 🎉');
       navigate('/purchased');
+      return;
+    }
+
+    setCheckingOut(true);
+
+    try {
+      const orderRes = await api.post('/payments/create-order', {
+        amount: totalAmt,
+      });
+
+      const { order, key } = orderRes.data;
+
+      const options = {
+        key,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Tegron Learnify',
+        description: 'Book Purchase',
+        order_id: order.id,
+
+        handler: async function (response) {
+          try {
+            const verifyRes = await api.post('/payments/verify-payment', response);
+
+            if (verifyRes.data.success) {
+              await checkoutCart();
+              clearCartLocal();
+              toast.success('Payment successful! Order placed 🎉');
+              navigate('/purchased');
+            } else {
+              toast.error('Payment verification failed');
+            }
+          } catch (err) {
+            toast.error('Payment verification failed');
+          }
+        },
+
+        theme: {
+          color: '#28C7D9',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Checkout failed');
+      toast.error(err.response?.data?.message || 'Payment failed');
     } finally {
       setCheckingOut(false);
     }

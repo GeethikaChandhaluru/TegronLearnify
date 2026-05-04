@@ -54,6 +54,10 @@ app.use('/api/admin', adminRoutes);
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Tegron Notes API is running 📚' });
 });
+
+const paymentRoutes = require("./src/routes/paymentRoutes");
+
+app.use("/api/payments", paymentRoutes);
 // ======================
 // Error handler
 // ======================
