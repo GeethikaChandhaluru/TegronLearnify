@@ -53,6 +53,12 @@ export const checkoutCart = () => API.post('/orders/checkout');
 export const getMyOrders = () => API.get('/orders');
 export const getPurchasedBooks = () => API.get('/orders/purchased');
 
+// ================= PAYMENTS =================
+export const createRazorpayOrder = (amount) =>
+  API.post('/payments/create-order', { amount });
+
+export const verifyRazorpayPayment = (data) =>
+  API.post('/payments/verify-payment', data);
 
 // ================= ADMIN =================
 export const getAdminStats = () => API.get('/admin/stats');

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { buyNow } from '../services/api';
+import { buyNow, createRazorpayOrder, verifyRazorpayPayment } from '../services/api';
 import toast from 'react-hot-toast';
 import { getFileUrl } from '../utils/urlHelper';
 
@@ -10,12 +10,46 @@ export default function BookCard({ book, delay = 0 }) {
 
   const handleBuyNow = async (e) => {
     e.stopPropagation();
+
     try {
-      await buyNow(book._id);
-      toast.success('Purchase successful! Check My Books.');
-      navigate('/purchased');
+      if (book.price === 0) {
+        await buyNow(book._id);
+        toast.success('Purchase successful! Check My Books.');
+        navigate('/purchased');
+        return;
+      }
+
+      const { data } = await createRazorpayOrder(book.price);
+
+      const options = {
+        key: data.key,
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: 'Tegron Learnify',
+        description: book.title,
+        order_id: data.order.id,
+
+        handler: async function (response) {
+          const verifyRes = await verifyRazorpayPayment(response);
+
+          if (verifyRes.data.success) {
+            await buyNow(book._id);
+            toast.success('Payment successful! Book added to My Books.');
+            navigate('/purchased');
+          } else {
+            toast.error('Payment verification failed');
+          }
+        },
+
+        theme: {
+          color: '#28C7D9',
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Purchase failed');
+      toast.error(err.response?.data?.message || 'Payment failed');
     }
   };
 
