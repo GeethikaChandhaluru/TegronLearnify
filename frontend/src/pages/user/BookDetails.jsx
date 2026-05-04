@@ -24,6 +24,14 @@ export default function BookDetails() {
       .finally(() => setLoading(false));
   }, [id, navigate]);
 
+  // Auto-redirect to My Books 2.5s after successful purchase
+  useEffect(() => {
+    if (!showSuccess) return;
+    toast.success('Order Confirmed Successfully! 🎉');
+    const timer = setTimeout(() => navigate('/purchased'), 2500);
+    return () => clearTimeout(timer);
+  }, [showSuccess, navigate]);
+
   const handleBuyNow = async () => {
     setBuying(true);
 
@@ -81,10 +89,10 @@ export default function BookDetails() {
         <div className="modal-overlay">
           <div className="modal-box">
             <div className="modal-icon">🎉</div>
-            <h3>Order Confirmed!</h3>
+            <h3>Order Confirmed Successfully</h3>
             <p>
               <strong>{book.title}</strong> has been added to your library.
-              Head to <em>My Books</em> to start reading.
+              Redirecting you to <em>My Books</em> in a moment…
             </p>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => navigate('/')}>

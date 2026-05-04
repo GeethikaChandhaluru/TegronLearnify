@@ -29,7 +29,7 @@ export default function CartPage() {
     if (totalAmt <= 0) {
       await checkoutCart();
       clearCartLocal();
-      toast.success('Order placed successfully! 🎉');
+      toast.success('Order Confirmed Successfully! 🎉');
       navigate('/purchased');
       return;
     }
@@ -56,7 +56,7 @@ export default function CartPage() {
             if (verifyRes.data.success) {
               await checkoutCart();
               clearCartLocal();
-              toast.success('Payment successful! Order placed 🎉');
+              toast.success('Order Confirmed Successfully! 🎉');
               navigate('/purchased');
             } else {
               toast.error('Payment verification failed');
