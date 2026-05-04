@@ -5,10 +5,10 @@ import { useCart } from '../context/CartContext';
 import ConfirmModal from './ConfirmModal';
 
 export default function ProfileDropdown() {
-  const { user, logout }   = useAuth();
+  const { user, logout } = useAuth();
   const { clearCartLocal } = useCart();
-  const navigate           = useNavigate();
-  const [open, setOpen]    = useState(false);
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const ref = useRef(null);
 
@@ -62,7 +62,7 @@ export default function ProfileDropdown() {
         <ConfirmModal
           icon="🚪"
           title="Logout?"
-          message="Are you sure you want to logout from Tegron Notes?"
+          message="Are you sure you want to logout from Tegron Learnify?"
           confirmText="Yes, Logout"
           cancelText="Stay"
           danger={false}

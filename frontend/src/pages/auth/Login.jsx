@@ -6,8 +6,8 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [form, setForm]       = useState({ email: '', password: '' });
-  const [error, setError]     = useState('');
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -48,7 +48,7 @@ export default function Login() {
       <div className="auth-form-area">
         <div className="auth-card">
           <h2>Welcome Back</h2>
-          <p className="subtitle">Sign in to your Tegron Notes account</p>
+          <p className="subtitle">Sign in to your Tegron Learnify account</p>
 
           {error && <div className="error-msg">⚠️ {error}</div>}
 

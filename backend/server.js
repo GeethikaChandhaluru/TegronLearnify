@@ -52,7 +52,7 @@ app.use('/api/admin', adminRoutes);
 // Health check
 // ======================
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Tegron Notes API is running 📚' });
+  res.status(200).json({ message: 'Tegron Learnify API is running 📚' });
 });
 
 const paymentRoutes = require("./src/routes/paymentRoutes");

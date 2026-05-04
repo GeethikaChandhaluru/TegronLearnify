@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Restore session on mount
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     const { data } = await apiSignup({ username, email, password });
     localStorage.setItem('tn_token', data.data.token);
     setUser(data.data);
-    toast.success('Account created! Welcome to Tegron Notes 📚');
+    toast.success('Account created! Welcome to Tegron Learnify 📚');
     return data.data;
   };
 

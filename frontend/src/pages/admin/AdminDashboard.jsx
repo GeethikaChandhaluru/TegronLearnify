@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [stats, setStats]     = useState(null);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,14 +19,14 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="admin-page-title">Welcome, {user?.username} 👋</div>
-      <div className="admin-page-subtitle">Here's what's happening with Tegron Notes today.</div>
+      <div className="admin-page-subtitle">Here's what's happening with Tegron Learnify today.</div>
 
       {loading ? <Loader /> : (
         <div className="stats-grid">
           {[
-            { label: 'Total Users',   value: stats?.totalUsers,   color: 'cyan',   icon: '👥' },
-            { label: 'Total Books',   value: stats?.totalBooks,   color: '',       icon: '📚' },
-            { label: 'Total Orders',  value: stats?.totalOrders,  color: 'orange', icon: '🧾' },
+            { label: 'Total Users', value: stats?.totalUsers, color: 'cyan', icon: '👥' },
+            { label: 'Total Books', value: stats?.totalBooks, color: '', icon: '📚' },
+            { label: 'Total Orders', value: stats?.totalOrders, color: 'orange', icon: '🧾' },
             { label: 'Total Revenue', value: `₹${(stats?.totalRevenue || 0).toFixed(2)}`, color: 'gold', icon: '💰' },
           ].map(s => (
             <div key={s.label} className="stat-card" style={{ animationDelay: '0ms' }}>
@@ -50,10 +50,10 @@ export default function AdminDashboard() {
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {[
-            { label: 'Add New Book', path: '/admin/add-book',     cls: 'btn-primary' },
+            { label: 'Add New Book', path: '/admin/add-book', cls: 'btn-primary' },
             { label: 'Manage Books', path: '/admin/manage-books', cls: 'btn-outline' },
-            { label: 'View Orders',  path: '/admin/orders',       cls: 'btn-outline' },
-            { label: 'View Users',   path: '/admin/users',        cls: 'btn-outline' },
+            { label: 'View Orders', path: '/admin/orders', cls: 'btn-outline' },
+            { label: 'View Users', path: '/admin/users', cls: 'btn-outline' },
           ].map(a => (
             <a key={a.path} href={a.path} className={`btn ${a.cls}`} style={{ fontSize: '0.875rem' }}>
               {a.label}
